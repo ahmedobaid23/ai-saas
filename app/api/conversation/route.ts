@@ -1,34 +1,32 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// let chatHistory: any[] = [];
 
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     const body = await req.json();
-    const { messages } = body;
+    const { userMessage } = body;
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    if (!openai.apiKey) {
-      return new NextResponse("OpenAI API Key not configured", { status: 500 });
+    if (!model.apiKey) {
+      return new NextResponse("Gemini API Key not configured", { status: 500 });
     }
 
-    if (!messages) {
+    if (!userMessage) {
       return new NextResponse("Messages are required", { status: 400 });
     }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages,
-    });
-    return NextResponse.json(response.choices[0].message);
+    const result = await model.generateContent(userMessage);
+    return NextResponse.json(result.response.text());
   } catch (error) {
     console.log("[CONVERSATION_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });

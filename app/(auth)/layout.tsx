@@ -1,9 +1,9 @@
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import React from "react";
+
+const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="h-full flex items-center justify-center">{children}</div>
+    <div className="flex items-center justify-center h-full">{children}</div>
   );
-}
+};
+
+export default AuthLayout;

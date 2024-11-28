@@ -12,11 +12,14 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 export default function Conversation() {
   const router = useRouter();
-  const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([]);
+
+  // after user signsup
+  // const [messages, setMessages] = useState([]);
+
+  const [response, setResponse] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -29,17 +32,12 @@ export default function Conversation() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const userMessage: ChatCompletionMessageParam = {
-        role: "user",
-        content: values.prompt,
-      };
-      const newMessages = [...messages, userMessage];
-
+      const userMessage = values.prompt;
       const response = await axios.post("/api/conversation", {
-        messages: newMessages,
+        userMessage,
       });
 
-      setMessages((current) => [...current, newMessages, response.data]);
+      setResponse(response.data);
       form.reset();
     } catch (error: any) {
       console.log(error);
@@ -90,9 +88,7 @@ export default function Conversation() {
         </div>
         <div className="space-y-4 mt-4">
           <div className="flex flex-col reverse gap-y-4">
-            {messages.map((message, index) => (
-              <div key={index}>{message}</div>
-            ))}
+            {response && <div>{response}</div>}
           </div>
         </div>
       </div>
