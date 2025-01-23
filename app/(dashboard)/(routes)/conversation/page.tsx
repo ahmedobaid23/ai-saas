@@ -1,25 +1,40 @@
 "use client";
 
-import Heading from "@/components/heading";
-import { MessageSquare } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+
+import { MessageSquare, User } from "lucide-react";
 import * as z from "zod";
 import { formSchema } from "./constants";
+import axios, { all } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+
+import Heading from "@/components/heading";
+import { Empty } from "@/components/empty";
+import { Loader } from "@/components/loader";
+import { UserAvatar } from "@/components/user-avatar";
+import { BotAvatar } from "@/components/bot-avatar";
+
 import { Button } from "@/components/ui/button";
-import axios from "axios";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+
+import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+
+interface Parts {
+  text: string;
+}
+
+interface Message {
+  role: "user" | "model";
+  parts: Parts[];
+}
 
 export default function Conversation() {
   const router = useRouter();
-
-  // after user signsup
-  // const [messages, setMessages] = useState([]);
-
-  const [response, setResponse] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,12 +47,16 @@ export default function Conversation() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const userMessage = values.prompt;
-      const response = await axios.post("/api/conversation", {
-        userMessage,
-      });
+      const userMessage: Message = {
+        role: "user",
+        parts: [{ text: values.prompt }],
+      };
 
-      setResponse(response.data);
+      const response = await axios.post("/api/conversation", {
+        messages,
+        userMessage: userMessage.parts[0].text,
+      });
+      setMessages((current) => [...current, userMessage, response.data]);
       form.reset();
     } catch (error: any) {
       console.log(error);
@@ -55,7 +74,7 @@ export default function Conversation() {
         iconColor="text-violet-500"
         bgColor="bg-violet-500/10"
       />
-      <div className="px-4 lg:px-8">
+      <div className="px-4 pb-4 lg:px-8 lg:pb-8">
         <div>
           <Form {...form}>
             <form
@@ -87,8 +106,36 @@ export default function Conversation() {
           </Form>
         </div>
         <div className="space-y-4 mt-4">
-          <div className="flex flex-col reverse gap-y-4">
-            {response && <div>{response}</div>}
+          {isLoading && (
+            <div className="rounded-lg p-8 w-full flex items-center justify-center bg-muted">
+              <Loader />
+            </div>
+          )}
+          {messages.length === 0 && !isLoading && (
+            <Empty label="No conversation yet" />
+          )}
+          <div className="flex flex-col-reverse gap-y-4">
+            {messages
+              .slice()
+              .reverse()
+              .map((message) => (
+                <div
+                  key={message.parts[0].text}
+                  className={cn(
+                    "p-8 w-full flex items-start gap-x-4 rounded-lg",
+                    message.role === "user"
+                      ? "bg-white border border-black/10"
+                      : "bg-muted"
+                  )}
+                >
+                  {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
+                  <div className="py-2">
+                    <ReactMarkdown className="text-sm">
+                      {message.parts[0].text}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       </div>
