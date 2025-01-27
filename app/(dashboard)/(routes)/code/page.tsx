@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
-import { MessageSquare, User } from "lucide-react";
+import { Code } from "lucide-react";
 import * as z from "zod";
 import { formSchema } from "./constants";
 import axios, { all } from "axios";
@@ -32,7 +32,7 @@ interface Message {
   parts: Parts[];
 }
 
-export default function Conversation() {
+export default function CodeGeneration() {
   const router = useRouter();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -60,7 +60,7 @@ export default function Conversation() {
         parts: [{ text: values.prompt }],
       };
 
-      const response = await axios.post("/api/conversation", {
+      const response = await axios.post("/api/code", {
         messages,
         userMessage: userMessage.parts[0].text,
       });
@@ -76,11 +76,11 @@ export default function Conversation() {
   return (
     <div>
       <Heading
-        title="Conversation"
-        description="Our most advanced conversation tool."
-        icon={MessageSquare}
-        iconColor="text-violet-500"
-        bgColor="bg-violet-500/10"
+        title="Code Generation"
+        description="Generate code using descriptive prompts."
+        icon={Code}
+        iconColor="text-green-700"
+        bgColor="bg-green-700/10"
       />
       <div className="px-4 pb-4 lg:px-8 lg:pb-8">
         <div className="sticky top-0 bg-white z-10 transition-all py-6">
@@ -97,7 +97,7 @@ export default function Conversation() {
                       <Input
                         className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
                         disabled={isLoading}
-                        placeholder="What is the radius of the Moon?"
+                        placeholder="Simple toggle button using react hooks."
                         {...field}
                       />
                     </FormControl>
@@ -130,7 +130,7 @@ export default function Conversation() {
                 <div
                   key={message.parts[0].text}
                   className={cn(
-                    "p-8 w-full flex items-start gap-x-4 rounded-lg",
+                    "p-8 w-full flex items-start gap-x-8 rounded-lg",
                     message.role === "user"
                       ? "bg-white border border-black/10"
                       : "bg-muted"
@@ -139,7 +139,22 @@ export default function Conversation() {
                   {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
                   <div className="py-2">
                     <div ref={messagesEndRef} />
-                    <ReactMarkdown className="text-sm">
+                    <ReactMarkdown
+                      components={{
+                        pre: ({ node, ...props }) => (
+                          <div className="w-full my-2 bg-black/10 p-2 rounded-lg overflow-auto">
+                            <pre {...props} />
+                          </div>
+                        ),
+                        code: ({ node, ...props }) => (
+                          <code
+                            className="bg-black/10 p-1 rounded-lg"
+                            {...props}
+                          />
+                        ),
+                      }}
+                      className="text-sm overflow-hidden leading-7"
+                    >
                       {message.parts[0].text}
                     </ReactMarkdown>
                   </div>
