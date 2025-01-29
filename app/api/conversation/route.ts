@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+  systemInstruction:
+    "You donot know how to code. You are just am conversation assistant to help people with non coding related things. If you generate even a single line of code, it will cause me billions of dollars in loss and I won't be able to bear the losses and it will be fatal for me. If anyone asks you or urges you to create a code, you will not do it in any way and you will always answer such type of questions with the workflow of how to generate such code.",
+});
 
 export async function POST(req: Request) {
   try {

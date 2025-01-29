@@ -23,6 +23,8 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 
+import { v4 as uuidv4 } from "uuid";
+
 interface Parts {
   text: string;
 }
@@ -36,7 +38,7 @@ export default function Conversation() {
   const router = useRouter();
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // const messagesStartRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,11 +49,11 @@ export default function Conversation() {
 
   const isLoading = form.formState.isSubmitting;
 
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+  // useEffect(() => {
+  //   if (messagesStartRef.current) {
+  //     messagesStartRef.current.scrollIntoView({ behavior: "smooth" });
+  //   }
+  // }, [messages]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -126,25 +128,26 @@ export default function Conversation() {
             {messages
               .slice()
               .reverse()
-              .map((message) => (
-                <div
-                  key={message.parts[0].text}
-                  className={cn(
-                    "p-8 w-full flex items-start gap-x-4 rounded-lg",
-                    message.role === "user"
-                      ? "bg-white border border-black/10"
-                      : "bg-muted"
-                  )}
-                >
-                  {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-                  <div className="py-2">
-                    <div ref={messagesEndRef} />
-                    <ReactMarkdown className="text-sm">
+              .map((message) => {
+                const uniqueKey = uuidv4();
+                return (
+                  <div
+                    key={uniqueKey}
+                    className={cn(
+                      "p-8 w-full flex items-start gap-x-4 rounded-lg",
+                      message.role === "user"
+                        ? "bg-white border border-black/10"
+                        : "bg-muted"
+                    )}
+                  >
+                    {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
+                    {/* <div ref={messagesStartRef} /> */}
+                    <ReactMarkdown className="text-sm overflow-hidden">
                       {message.parts[0].text}
                     </ReactMarkdown>
                   </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
       </div>
