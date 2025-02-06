@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { ImageIcon } from "lucide-react";
 import * as z from "zod";
-import { amountOptions, aspectRatioOptions, formSchema } from "./constants";
+import { formSchema, resolutionOptions } from "./constants";
 import axios, { all } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -26,26 +26,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface Parts {
-  text: string;
-}
-
-interface Message {
-  role: "user" | "model";
-  parts: Parts[];
-}
-
 export default function Image() {
   const router = useRouter();
-  const [images, setImages] = useState<string[]>([]);
+  const [imageURL, setImageURL] = useState<string | null>(null);
   // const messagesStartRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      amount: "1",
-      aspectRatio: "1:1",
+      resolution: "256",
     },
   });
 
@@ -59,10 +49,14 @@ export default function Image() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      setImages([]);
-      const response = await axios.post("/api/image", values);
-      const urls = response.data.map((image: { url: string }) => image.url);
-      setImages(urls);
+      setImageURL(null);
+      const response = await axios.post("/api/image", values, {
+        responseType: "blob",
+      });
+      const imageBlob = await response.data;
+      console.log(imageBlob, imageBlob.type);
+      const url = URL.createObjectURL(imageBlob);
+      setImageURL(url);
       form.reset();
     } catch (error: any) {
       console.log(error);
@@ -90,7 +84,7 @@ export default function Image() {
               <FormField
                 name="prompt"
                 render={({ field }) => (
-                  <FormItem className="col-span-12 lg:col-span-6">
+                  <FormItem className="col-span-12 lg:col-span-8">
                     <FormControl className="m-0 p-0">
                       <Input
                         className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
@@ -104,7 +98,7 @@ export default function Image() {
               />
               <FormField
                 control={form.control}
-                name="amount"
+                name="resolution"
                 render={({ field }) => (
                   <FormItem className="col-span-12 lg:col-span-2">
                     <Select
@@ -119,36 +113,9 @@ export default function Image() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {amountOptions.map((option) => (
+                        {resolutionOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="aspectRatio"
-                render={({ field }) => (
-                  <FormItem className="col-span-12 lg:col-span-2">
-                    <Select
-                      disabled={isLoading}
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue defaultValue={field.value} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {aspectRatioOptions.map((ratio) => (
-                          <SelectItem key={ratio.value} value={ratio.value}>
-                            {ratio.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -171,10 +138,14 @@ export default function Image() {
               <Loader />
             </div>
           )}
-          {images.length === 0 && !isLoading && (
-            <Empty label="No images generated" />
+          {!imageURL && !isLoading && <Empty label="No images generated" />}
+          {imageURL && (
+            <img
+              src={imageURL}
+              alt="Generated"
+              className="rounded-lg shadow-lg"
+            />
           )}
-          <div>Images will be rendered here</div>
         </div>
       </div>
     </div>
