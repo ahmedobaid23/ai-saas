@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-import { ImageIcon } from "lucide-react";
+import { Download, ImageIcon } from "lucide-react";
 import * as z from "zod";
-import { formSchema, resolutionOptions } from "./constants";
+import { amountOptions, formSchema } from "./constants";
 import axios, { all } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -25,38 +26,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardFooter } from "@/components/ui/card";
 
-export default function Image() {
+export default function ImagePage() {
   const router = useRouter();
-  const [imageURL, setImageURL] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   // const messagesStartRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      resolution: "256",
+      amount: "1",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
 
-  // useEffect(() => {
-  //   if (messagesStartRef.current) {
-  //     messagesStartRef.current.scrollIntoView({ behavior: "smooth" });
-  //   }
-  // }, [messages]);
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      setImageURL(null);
+      setImages([]);
+
       const response = await axios.post("/api/image", values, {
-        responseType: "blob",
+        responseType: "json",
       });
-      const imageBlob = await response.data;
-      console.log(imageBlob, imageBlob.type);
-      const url = URL.createObjectURL(imageBlob);
-      setImageURL(url);
+
+      const base64URLs = await response.data;
+
+      const imageUrls = base64URLs.map((base64String: any) => {
+        const byteCharacters = atob(base64String);
+        const byteNumbers = new Uint8Array(byteCharacters.length);
+
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+
+        const blob = new Blob([byteNumbers], { type: "image/png" });
+
+        return URL.createObjectURL(blob);
+      });
+
+      setImages(imageUrls);
       form.reset();
     } catch (error: any) {
       console.log(error);
@@ -98,7 +108,7 @@ export default function Image() {
               />
               <FormField
                 control={form.control}
-                name="resolution"
+                name="amount"
                 render={({ field }) => (
                   <FormItem className="col-span-12 lg:col-span-2">
                     <Select
@@ -113,7 +123,7 @@ export default function Image() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {resolutionOptions.map((option) => (
+                        {amountOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -138,14 +148,29 @@ export default function Image() {
               <Loader />
             </div>
           )}
-          {!imageURL && !isLoading && <Empty label="No images generated" />}
-          {imageURL && (
-            <img
-              src={imageURL}
-              alt="Generated"
-              className="rounded-lg shadow-lg"
-            />
-          )}
+          {!images && !isLoading && <Empty label="No images generated" />}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8">
+            {images &&
+              images.map((url) => (
+                <Card key={url} className="rounded-lg overflow-hidden">
+                  <div className="relative aspect-square">
+                    <Image src={url} alt="Generated Image" fill />
+                  </div>
+                  <CardFooter className="p-2">
+                    <Button
+                      onClick={() => {
+                        window.open(url);
+                      }}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+          </div>
         </div>
       </div>
     </div>

@@ -4,12 +4,12 @@ export const formSchema = z.object({
   prompt: z.string().min(1, {
     message: "Image prompt is required",
   }),
-  resolution: z.string().min(1)
+  amount: z.string().min(1),
 });
 
-export const resolutionOptions = [
-  { label: "256x256", value: "256" },
-  { label: "512x512", value: "512" },
-  { label: "1024x1024", value: "1024" },
-  { label: "2048x2048", value: "2048" },
+export const amountOptions = [
+  { label: "1 Photo", value: "1" },
+  { label: "2 Photos", value: "2" },
+  { label: "3 Photos", value: "3" },
+  { label: "4 Photos", value: "4" },
 ];
