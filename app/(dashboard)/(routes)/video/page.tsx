@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
-import { Download, ImageIcon } from "lucide-react";
+import { VideoIcon } from "lucide-react";
 import * as z from "zod";
-import { amountOptions, formSchema } from "./constants";
+import { formSchema, motionOptions, typeOptions } from "./constants";
 import axios, { all } from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -18,7 +17,6 @@ import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-
 import {
   Select,
   SelectContent,
@@ -26,48 +24,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardFooter } from "@/components/ui/card";
 import toast from "react-hot-toast";
 
-export default function ImagePage() {
+export default function VideoGeneration() {
   const router = useRouter();
-  const [images, setImages] = useState<string[]>([]);
+
+  const [video, setVideo] = useState<string>();
   // const messagesStartRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      amount: "1",
+      type: "ToonYou",
+      motion: "Zoom in",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
 
+  // useEffect(() => {
+  //   if (messagesStartRef.current) {
+  //     messagesStartRef.current.scrollIntoView({ behavior: "smooth" });
+  //   }
+  // }, [messages]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      setImages([]);
-
-      const response = await axios.post("/api/image", values, {
-        responseType: "json",
-      });
-
-      const base64URLs = await response.data;
-
-      const imageUrls = base64URLs.map((base64String: any) => {
-        const byteCharacters = atob(base64String);
-        const byteNumbers = new Uint8Array(byteCharacters.length);
-
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-
-        const blob = new Blob([byteNumbers], { type: "image/png" });
-
-        return URL.createObjectURL(blob);
-      });
-
-      setImages(imageUrls);
+      setVideo(undefined);
+      const response = await axios.post("/api/video", values);
+      const audio = response.data.data[0].url;
+      setVideo(audio);
       form.reset();
     } catch (error: any) {
       toast.error("Something went wrong");
@@ -79,11 +66,11 @@ export default function ImagePage() {
   return (
     <div>
       <Heading
-        title="Image Generation"
-        description="Turn your prompts into images."
-        icon={ImageIcon}
-        iconColor="text-pink-700"
-        bgColor="bg-pink-700/10"
+        title="Video Generation"
+        description="Turn your prompts into video."
+        icon={VideoIcon}
+        iconColor="text-orange-700"
+        bgColor="bg-orange-700/10"
       />
       <div className="px-4 pb-4 lg:px-8 lg:pb-8">
         <div className="sticky top-0 bg-white z-10 transition-all py-6">
@@ -95,12 +82,12 @@ export default function ImagePage() {
               <FormField
                 name="prompt"
                 render={({ field }) => (
-                  <FormItem className="col-span-12 lg:col-span-8">
+                  <FormItem className="col-span-12 lg:col-span-6">
                     <FormControl className="m-0 p-0">
                       <Input
                         className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
                         disabled={isLoading}
-                        placeholder="A picture of a horse in Swiss alps"
+                        placeholder="Clown fish swimming around a coral reef"
                         {...field}
                       />
                     </FormControl>
@@ -108,8 +95,7 @@ export default function ImagePage() {
                 )}
               />
               <FormField
-                control={form.control}
-                name="amount"
+                name="type"
                 render={({ field }) => (
                   <FormItem className="col-span-12 lg:col-span-2">
                     <Select
@@ -124,7 +110,33 @@ export default function ImagePage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {amountOptions.map((option) => (
+                        {typeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="motion"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 lg:col-span-2">
+                    <Select
+                      disabled={isLoading}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue defaultValue={field.value} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {motionOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -149,29 +161,15 @@ export default function ImagePage() {
               <Loader />
             </div>
           )}
-          {!images && !isLoading && <Empty label="No images generated" />}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8">
-            {images &&
-              images.map((url) => (
-                <Card key={url} className="rounded-lg overflow-hidden">
-                  <div className="relative aspect-square">
-                    <Image src={url} alt="Generated Image" fill />
-                  </div>
-                  <CardFooter className="p-2">
-                    <Button
-                      onClick={() => {
-                        window.open(url);
-                      }}
-                      variant="secondary"
-                      className="w-full"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-          </div>
+          {!video && !isLoading && <Empty label="No video generated" />}
+          {video && (
+            <video
+              controls
+              className="w-full aspect-video mt-8 rounded-lg border bg-black"
+            >
+              <source src={video} />
+            </video>
+          )}
         </div>
       </div>
     </div>

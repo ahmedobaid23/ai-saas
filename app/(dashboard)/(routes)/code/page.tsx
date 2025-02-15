@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 
 import { v4 as uuidv4 } from "uuid";
+import toast from "react-hot-toast";
 
 interface Parts {
   text: string;
@@ -69,7 +70,7 @@ export default function CodeGeneration() {
       setMessages((current) => [...current, userMessage, response.data]);
       form.reset();
     } catch (error: any) {
-      console.log(error);
+      toast.error("Something went wrong");
     } finally {
       router.refresh();
     }

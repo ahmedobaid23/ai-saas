@@ -17,6 +17,7 @@ import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import toast from "react-hot-toast";
 
 export default function MusicGeneration() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function MusicGeneration() {
       setMusic(audio);
       form.reset();
     } catch (error: any) {
-      console.log(error);
+      toast.error("Something went wrong");
     } finally {
       router.refresh();
     }

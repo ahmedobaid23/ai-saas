@@ -4,14 +4,13 @@ import { Client } from "@gradio/client";
 
 export async function POST(req: Request) {
   try {
-    const client = await Client.connect(
-      "artificialguybr/Stable-Audio-Open-Zero"
-    );
+    const client = await Client.connect("ByteDance/AnimateDiff-Lightning");
 
     const { userId } = await auth();
     const body = await req.json();
-    const { prompt } = body;
+    const { prompt, type, motion } = body;
 
+    console.log(body);
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -20,18 +19,18 @@ export async function POST(req: Request) {
       return new NextResponse("Prompt is required", { status: 400 });
     }
 
-    const response = await client.predict("/predict", {
+    const response = await client.predict("/generate_image", {
       prompt,
-      seconds_total: 5,
-      steps: 100,
-      cfg_scale: 10,
+      base: type,
+      motion: "",
+      step: "1",
     });
 
     console.log(response);
 
     return NextResponse.json(response);
   } catch (error) {
-    console.log("[MUSIC_ERROR]", error);
+    console.log("[VIDEO_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
