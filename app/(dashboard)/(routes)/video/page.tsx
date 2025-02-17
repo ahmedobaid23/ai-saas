@@ -37,7 +37,7 @@ export default function VideoGeneration() {
     defaultValues: {
       prompt: "",
       type: "ToonYou",
-      motion: "Zoom in",
+      motion: "zoom-in",
     },
   });
 
@@ -53,8 +53,8 @@ export default function VideoGeneration() {
     try {
       setVideo(undefined);
       const response = await axios.post("/api/video", values);
-      const audio = response.data.data[0].url;
-      setVideo(audio);
+      const url = response.data;
+      setVideo(url);
       form.reset();
     } catch (error: any) {
       toast.error("Something went wrong");
@@ -163,12 +163,11 @@ export default function VideoGeneration() {
           )}
           {!video && !isLoading && <Empty label="No video generated" />}
           {video && (
-            <video
-              controls
-              className="w-full aspect-video mt-8 rounded-lg border bg-black"
-            >
-              <source src={video} />
-            </video>
+            <div className="flex justify-center items-center h-full">
+              <video controls className="mt-8 rounded-lg border bg-black">
+                <source src={video} />
+              </video>
+            </div>
           )}
         </div>
       </div>

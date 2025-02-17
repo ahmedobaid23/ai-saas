@@ -14,12 +14,12 @@ export const typeOptions = [
 ];
 
 export const motionOptions = [
-  { label: "Zoom in", value: "Zoom in" },
-  { label: "Zoom out", value: "Zoom out" },
-  { label: "Tilt up", value: "Tilt up" },
-  { label: "Tilt down", value: "Tilt down" },
-  { label: "Pan left", value: "Pan left" },
-  { label: "Pan right", value: "Pan right" },
-  { label: "Roll left", value: "Roll left" },
-  { label: "Roll right", value: "Roll right" },
+  { label: "Zoom in", value: "zoom-in" },
+  { label: "Zoom out", value: "zoon-out" },
+  { label: "Tilt up", value: "tilt-up" },
+  { label: "Tilt down", value: "tilt-down" },
+  { label: "Pan left", value: "pan-left" },
+  { label: "Pan right", value: "pan-right" },
+  { label: "Roll left", value: "rolling-anticlockwise" },
+  { label: "Roll clockwise", value: "rolling-clockwise" },
 ];

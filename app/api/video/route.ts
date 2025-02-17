@@ -22,15 +22,19 @@ export async function POST(req: Request) {
     const response = await client.predict("/generate_image", {
       prompt,
       base: type,
-      motion: "",
-      step: "1",
+      motion: `guoyww/animatediff-motion-lora-${motion}`,
+      step: 8,
     });
 
-    console.log(response);
+    const responseData = response.data as { video: { url: string } }[];
 
-    return NextResponse.json(response);
+    return NextResponse.json(responseData[0].video.url);
   } catch (error) {
     console.log("[VIDEO_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
+
+// guoyww / animatediff - motion - lora - zoom - out
+// guoyww / animatediff - motion - lora - rolling - clockwise
+// guoyww / animatediff - motion - lora - tilt - up
