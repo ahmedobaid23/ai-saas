@@ -15,7 +15,7 @@ export const typeOptions = [
 
 export const motionOptions = [
   { label: "Zoom in", value: "zoom-in" },
-  { label: "Zoom out", value: "zoon-out" },
+  { label: "Zoom out", value: "zoom-out" },
   { label: "Tilt up", value: "tilt-up" },
   { label: "Tilt down", value: "tilt-down" },
   { label: "Pan left", value: "pan-left" },
